@@ -69,6 +69,7 @@ jobs:
             7z a ${{ matrix.asset_name }} ${{ matrix.artifact_name }}
           else
             tar -czf ${{ matrix.asset_name }} ${{ matrix.artifact_name }}
+            pwd
           fi
 
       - name: Upload binaries to release
