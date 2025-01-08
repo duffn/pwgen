@@ -1,0 +1,72 @@
+name: odin
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/odin.yaml
+      - odin/**
+
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - .github/workflows/odin.yaml
+      - odin/**
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 30
+
+    concurrency:
+      group: ${{ github.ref_name != 'main' && format('{0}-{1}-{2}', github.workflow, github.ref, matrix.os) || github.sha }}
+      cancel-in-progress: ${{ github.ref_name != 'main' }}
+
+    defaults:
+      run:
+        working-directory: odin
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: odin
+
+      - uses: laytan/setup-odin@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: dev-2024-12
+
+      - name: Set executable name
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            echo "binary_extension=.exe" >> "$GITHUB_ENV"
+          else
+            echo "binary_extension=" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build desktop
+        shell: bash
+        run: odin build . -out:pwgen$binary_extension
+
+      - name: Compress binary
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            7z a pwgen-win-amd64.zip pwgen$binary_extension
+          elif [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            tar -czf pwgen-linux-amd64.tar.gz pwgen$binary_extension
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            tar -czf pwgen-macos-arm64.tar.gz pwgen$binary_extension
+          fi
