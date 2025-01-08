@@ -21,10 +21,17 @@ jobs:
   build:
     strategy:
       matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macos-latest
+        include:
+          - os: ubuntu-latest
+            artifact_name: pwgen
+            asset_name: pwgen-linux-amd64.tar.gz
+          - os: windows-latest
+            artifact_name: pwgen.exe
+            asset_name: pwgen-windows-amd64.zip
+          - os: macos-latest
+            artifact_name: pwgen
+            asset_name: pwgen-macos-arm64.tar.gz
+
     runs-on: ${{ matrix.os }}
 
     timeout-minutes: 30
@@ -48,26 +55,24 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: dev-2024-12
 
-      - name: Set executable name
-        shell: bash
-        run: |
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            echo "binary_extension=.exe" >> "$GITHUB_ENV"
-          else
-            echo "binary_extension=" >> "$GITHUB_ENV"
-          fi
-
       - name: Build desktop
         shell: bash
-        run: odin build . -out:pwgen$binary_extension
+        run: odin build . -out:${{ matrix.artifact_name }}
 
       - name: Compress binary
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            7z a pwgen-win-amd64.zip pwgen$binary_extension
-          elif [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            tar -czf pwgen-linux-amd64.tar.gz pwgen$binary_extension
-          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            tar -czf pwgen-macos-arm64.tar.gz pwgen$binary_extension
+            7z a ${{ matrix.asset_name }} ${{ matrix.artifact_name }}
+          else
+            tar -czf ${{ matrix.asset_name }} ${{ matrix.artifact_name }}
           fi
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ matrix.asset_name }}
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}
+          draft: true
