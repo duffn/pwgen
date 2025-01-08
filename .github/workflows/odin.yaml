@@ -25,9 +25,9 @@ jobs:
           - os: ubuntu-latest
             artifact_name: pwgen
             asset_name: pwgen-linux-amd64.tar.gz
-          - os: windows-latest
-            artifact_name: pwgen.exe
-            asset_name: pwgen-windows-amd64.zip
+          # - os: windows-latest
+          #   artifact_name: pwgen.exe
+          #   asset_name: pwgen-windows-amd64.zip
           - os: macos-latest
             artifact_name: pwgen
             asset_name: pwgen-macos-arm64.tar.gz
@@ -65,7 +65,7 @@ jobs:
             7z a ${{ matrix.asset_name }} ${{ matrix.artifact_name }}
             pwd
           else
-            tar -czf ${{ matrix.asset_name }} ${{ matrix.artifact_name }}
+            tar -czf /tmp/${{ matrix.asset_name }} ${{ matrix.artifact_name }}
             pwd
           fi
 
@@ -73,7 +73,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ matrix.asset_name }}
+          file: /tmp/${{ matrix.asset_name }}
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
           draft: true
