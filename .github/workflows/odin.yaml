@@ -67,6 +67,7 @@ jobs:
         run: |
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             7z a ${{ matrix.asset_name }} ${{ matrix.artifact_name }}
+            pwd
           else
             tar -czf ${{ matrix.asset_name }} ${{ matrix.artifact_name }}
             pwd
