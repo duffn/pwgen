@@ -1,6 +1,5 @@
 package main
 
-import "base:runtime"
 import "core:crypto"
 import "core:flags"
 import "core:fmt"
@@ -14,8 +13,7 @@ Options :: struct {
 }
 
 main :: proc() {
-	ctx := runtime.default_context()
-	ctx.random_generator = crypto.random_generator()
+	context.random_generator = crypto.random_generator()
 
 	opt: Options
 	style: flags.Parsing_Style = .Unix
